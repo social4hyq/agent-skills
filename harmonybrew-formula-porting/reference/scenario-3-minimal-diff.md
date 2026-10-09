@@ -8,6 +8,7 @@ diff -u upstream.rb Formula/{subdir}/{formula}.rb
 ```
 
 逐行过：**能保留的保留，能移除的移除，能不改的不改，必须适配的放补丁，能不用 wrapper 就不用。**
+搬运或补回上游内容时保留原有区块顺序和位置，尤其是 `bottle do`：不只保留内容/哈希，还要放在上游同一位置。完成后审查 diff，避免未改内容因移动而显示成删除再新增。
 
 1. **对齐上游工具链**：依赖和构建环境变量回到上游写法（例如上游 `rust` + `RUSTC_BOOTSTRAP=1`，就别因为历史原因留 `rustup`）；本机网络便利（crates.io 镜像回退之类，构建只走 CI）直接删；疑似冗余的环境变量先试删，让 CI 判决，失败再按日志逐条恢复。
 2. **适配进补丁，不进 formula 代码**：`Patches/{formula}/NNNN-*.patch` + `patch :p1 do file "Patches/…" end`。`inreplace`、`File.write` 改文本、在 install 里生成源码，凡是对固定文件的文本修改都改成补丁；对 `resource` 也一样，把 `patch` 块写在该 resource 内。例外：由 resource 或版本表在构建期动态算出的内容（如复制二进制进 shim 目录）补丁表达不了，留在 formula。
