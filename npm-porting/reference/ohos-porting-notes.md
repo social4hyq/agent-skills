@@ -1,11 +1,11 @@
 # OHOS 平台差异速查（npm port 视角）
 
-每条均经真机或社区仓 PR 实证；按需查用，不是必读。
+历史排障经验，按需查用；工具链、镜像和社区规范可能变化，使用前核实当前情况。
 
 ## 基本面
 
 - aarch64 + musl（非 glibc）；`process.platform === 'openharmony'`（不是 linux）
-- ELF 需带 `.codesign` 才能 exec/dlopen（两层签名：LLD CodeSign patch 链接期即签，或 `binary-sign-tool sign -selfSign 1` 补签；容器 CI 镜像的 LLD 自动签，zig 自带 LLD 不签）
+- ELF 执行和 dlopen 涉及签名；社区 NPMBUILD 发布产物由管理器 pack 阶段统一签名，配方不要手工签名。真机仍须验证。
 - musl ldso 不做 lazy binding：`.so`/`.node` 的全部 UND 符号在 dlopen 时即解析，缺一个就整体失败（glibc 习惯的"没用到就不炸"不成立）
 
 ## OHOS musl 缺符号
@@ -40,8 +40,6 @@
 - **node-gyp (nan)**：显式 `brew install llvm@21` 再设 `CC=cc CXX=c++`——`llvm-gcc-compat` 默认退回的系统 clang 15 缺 node 头文件要的 `<source_location>`（pprof 先例）；`node-gyp-build` 系产物落 `prebuilds/openharmony-arm64/<name>.node.abi<N>.node`（N 为 ABI 版本，断言后命名）
 - **Go**：brew go host 原生静态编译即可（typescript/tsgolint 先例），`-ldflags="-s -w" -trimpath`
 - node 26 有 `--experimental-ffi`：`node:ffi` 能 dlopen 但 `ffi_closure_alloc` 失败（closure 不支持），loader 的 try/catch 兜底要匹配该错误消息；node 全功能 FFI 以 bun 为准（bun:ffi 原生支持，opentui-core PR #22 实测）
-- CI 镜像无 git 二进制：build.sh 一律 curl tag tarball（codeload），别依赖 git clone（上游子模块用浅克隆 tarball 替代，tsgolint 先例）
-- **ci-runner 镜像自带 NDK stub**：`/system/lib64/ndk/libtime_service_ndk.so`（`OH_TimeService_GetTimeZone` 恒返回 Asia/Shanghai，Harmonybrew/ci 的 ci-runner build.sh 生成）——但该目录不在 musl 默认搜索路径，无 rpath 的 `.node` dlopen 仍报找不到该库（next-swc 实测）；ohos-npm-ports 的决定是 CI 不做 `.node` 加载验证（真机验收），描述也不展开 stub 机制
 
 ## SIGSYS 修复模式
 
@@ -52,4 +50,4 @@ init() 里无条件探测的 syscall 会直接杀进程（不是 ENOSYS），err
 - `npm install file:<目录>` = symlink 安装，不装该包依赖；tarball 才正常解析依赖
 - bun 1.4 `build --compile` 用 `--outfile=`（`-o` 不是合法 flag）
 - 工程接入未签名 `.node`：npm/pnpm 需 ohos-signpost；bun install / bun build --compile 已内置签名
-- packageManager 字段（如 pnpm）在 openharmony 无对应 @pnpm/exe 发布，重打包时删掉（vite-plus 先例）
+- packageManager 字段可能触发平台不支持的工具下载；先核查当前版本及实际安装路径，不要一律删除。
