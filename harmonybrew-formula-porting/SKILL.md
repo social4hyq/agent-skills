@@ -1,6 +1,6 @@
 ---
 name: harmonybrew-formula-porting
-description: Use when 涉及 Harmonybrew 官方 core 或自有 tap social4hyq/core 的 formula——录入/适配、修改、升级、修复、打 OHOS 补丁、排查构建/测试失败、revision，以及**为这些改动提 PR/MR**（这类任务必读，含提交身份、先自有 tap 构建验证、禁止直接向 Harmonybrew 提 PR 的硬性纪律）。覆盖搬运上游 formula、准入规则与 PR 自查纪律（PR 数量、冗余修改、用词禁令）。因不合准入规则（闭源、预编译二进制、fork 源）而落自有 tap 的 formula 也走这里。排除边界：npm 包移植制作走 npm-porting skill，前端工程适配走 ohos-frontend-upgrade skill。
+description: Use when 涉及 Harmonybrew 官方 core 或自有 tap social4hyq/core 的 formula——录入/适配、修改、升级、修复、打 OHOS 补丁、排查构建/测试失败、revision，以及**为这些改动提 PR/MR**（这类任务必读，含提交身份、先自有 tap 构建验证、禁止直接向 Harmonybrew 提 PR 的硬性纪律）。覆盖搬运上游 formula、准入规则与 PR 自查纪律（PR 数量、冗余修改、用词禁令）。因不合准入规则（闭源、预编译二进制、fork 源）而落自有 tap 的 formula 也走这里。Electron / Qt 等 GUI 桌面应用（HAP 打包、本机签名安装、沙箱限制、真机验收）同样走这里。排除边界：npm 包移植制作走 npm-porting skill，前端工程适配走 ohos-frontend-upgrade skill。
 ---
 
 # harmonybrew-formula-porting
@@ -41,3 +41,5 @@ done
 | `reference/own-tap.md` | 自有 tap `social4hyq/core`（GitHub 线）的增量规则 7 条 |
 | `reference/upstreaming.md` | 把自有 tap 的 formula 送进官方 core（顺序、描述写法） |
 | `reference/ohos-adaptation.md` | 报错对照定位 OHOS 适配问题 |
+| `reference/gui-apps.md` | 移植 Electron 壳等 GUI 桌面应用：HAP 沙箱与架构、签名分工、权限、专用 CI 镜像、驻留进程、真机验收 |
+| `reference/gui-qt.md` | 移植 Qt 应用：SDK 消费、`harmonydeployqt` 打包、`libz` 与 `.so` 签名、HAP 内容断言（先读 `gui-apps.md`） |
