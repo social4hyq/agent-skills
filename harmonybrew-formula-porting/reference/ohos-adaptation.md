@@ -69,3 +69,9 @@ git-fetch-with-cli = true
 ## 补丁参考库
 
 官方 core 近百份已合入：`ls $(brew --repo harmonybrew/core)/Patches`——同类问题优先复用，写法照抄。再不够查 [aports](https://gitlab.alpinelinux.org/alpine/aports)（musl 兼容补丁总库）与 [termux-packages](https://github.com/termux/termux-packages)（沙箱与非 FHS 路径实践）。
+
+## CLI 打开浏览器：Magpie 实机案例
+
+- 不要假设 Go 的 `runtime.GOOS` 是 `openharmony`。Magpie 的鸿蒙 bottle 实际走 `linux` 路径；只加 `case "openharmony"` 会继续调用 `xdg-open`。
+- 鸿蒙 PC 某些版本有可直接执行的 `/bin/aa`，但 `PATH` 先找到的 `/usr/bin/aa` 可能是首行不是 shebang 的文本包装器。交互 shell 能跑，不代表 Go 的 `exec.Command` 能跑；`LookPath("aa")` 成功后仍可能报 `exec format error`。先在实际 CLI 执行环境检查文件类型、首行和绝对路径。对此机型，检查 `/bin/aa` 可执行后直接用它传递参数 `start -b com.huawei.hmos.browser -a MainAbility -U <url>`，URL 作为单独参数，不拼 shell 命令。没有 `/bin/aa` 时保留原回退；没有验证过的回退不宣称能打开浏览器。
+- 安装目标 revision 的 bottle 后，先用 `brew list --versions` 核对 keg（应用的 `--version` 可能只显示上游版本），再跑 `brew test` 和真正的启动动作。默认端口被旧实例占用时，用 `magpie web --addr 127.0.0.1:<空闲端口>`，不杀旧实例；检查浏览器实际打开了该端口的页面，而非仅凭进程启动、HTTP 可达或未报错。记录时遮盖 URL 中的访问密钥，只停止本次测试启动的服务。
